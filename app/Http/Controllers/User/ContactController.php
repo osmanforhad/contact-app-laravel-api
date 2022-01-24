@@ -18,8 +18,8 @@ class ContactController extends Controller
     public function __construct(UrlGenerator $urlGenerator)
     {
         $this->middleware("auth:users");
-        $this->contacts = new Contacts;
         $this->base_url = $urlGenerator->to("/");
+        $this->contacts = new Contacts;
     }
 
 
@@ -30,7 +30,7 @@ class ContactController extends Controller
         [
             "token" => "required",
             "firstname" => "required|string",
-            "phone" => "required|string",
+            "phonenumber" => "required|string",
         ]);
 
 
@@ -53,7 +53,7 @@ class ContactController extends Controller
             $generate_name = uniqid()."_".time().date("Ymd")."_IMG";
             $base64Image = $profile_picture;
             $fileBin = file_get_contents($base64Image);
-            $mimetype = mime_content_type($fileBin);
+            $mimetype = mime_content_type($base64Image);
             if("image/png"==$mimetype)
             {
                 $file_name = $generate_name.".png";
@@ -106,7 +106,7 @@ class ContactController extends Controller
      {
          $file_directory = $this->base_url."/profile_images";
          $user = auth("users")->authenticate($token);
-         $user_id = $user->user_id;
+         $user_id = $user->id;
          if($pagination==null || $pagination=="")
          {
              $contacts = $this->contacts->where("user_id", $user_id)->orderBy("id", "DESC")->get()->toArray();
@@ -131,7 +131,7 @@ class ContactController extends Controller
         $validator = Validator::make($request->all(), 
         [
             "firstname" => "required|string",
-            "phone" => "required|string",
+            "phonenumber" => "required|string",
         ]);
 
         if($validator->fails())
@@ -152,7 +152,7 @@ class ContactController extends Controller
             ], 401);
         }
         $getFile = $findData->image_file;
-        $getFile== "default-avatar.png"? :unlink("./profile_images/".$getFile);
+        // $getFile== "default-avatar.png"? :unlink("./profile_images/".$getFile);
         $profile_picture = $request->profile_image;
         $file_name = "";
 
@@ -164,25 +164,20 @@ class ContactController extends Controller
             $generate_name = uniqid()."_".time().date("Ymd")."_IMG";
             $base64Image = $profile_picture;
             $fileBin = file_get_contents($base64Image);
-            $mimetype = mime_content_type($fileBin);
-            if("image/png"==$mimetype)
-            {
+            $mimetype = mime_content_type($base64Image);
+            if ("image/png"==$mimetype) {
                 $file_name = $generate_name.".png";
-            }
-            else if("image/jpeg"==$mimetype)
-            {
+            } elseif ("image/jpeg"==$mimetype) {
                 $file_name = $generate_name.".jpeg";
-            }
-            else if("image/jpg"==$mimetype)
-            {
+            } elseif ("image/jpg"==$mimetype) {
                 $file_name = $generate_name.".jpg";
-            }
-            else {
+            } else {
                 return response()->json([
                     "success" => false,
                     "message" => "Only png, jpeg and jpg files are accepted as profile picture",
                 ], 401);
             }
+        }
 
             $findData->firstname = $request->firstname;
             $findData->phonenumber = $request->phonenumber;
@@ -203,8 +198,6 @@ class ContactController extends Controller
                 "message" => "Contact Updated Successfully",
             ], 200);
 
-        }
-
      }
 
      //__Function for DELETE Contact info__//
@@ -222,7 +215,7 @@ class ContactController extends Controller
         $getFile = $findData->image_file;
         if($findData->delete())
         {
-            $getFile == "default-avatar.png"? :unlink("./profile_images/".$getFile); 
+            // $getFile == "default-avatar.png"? :unlink("./profile_images/".$getFile); 
             return response()->json([
                 "success" => true,
                 "message" => "Contact Deleted Successfully",
